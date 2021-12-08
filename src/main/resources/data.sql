@@ -1,0 +1,1 @@
+INSERT INTO MUSIC(musicName, urlAddress) VALUES('M.Jackson - Song1', 'D:/song1.mp3'), ('J.Lopez - Song2', 'D:/song2.mp3'), ('Alizee - Song3', 'D:/song3.mp3');

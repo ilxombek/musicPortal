@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <title>Music portal</title>
+    <meta charset=utf-8>
+    <link rel="stylesheet" href="style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <script type="application/javascript">
+        function uploadFile() {
+            let xhr = new XMLHttpRequest();
+            xhr.open("POST", "/music/upload");
+            xhr.onload = function(event){
+                if (event.target.status === 200) {
+                    let responseData = JSON.parse(event.target.response);
+                    if (responseData.statusCode === 200) {
+                        let musics = document.getElementById('musics');
+                        musics.innerHTML = '';
+                        loadTracks();
+                        $('#uploadModal').modal('hide');
+                    }
+                    alert(responseData.message);
+                } else {
+                    alert(event.target.response);
+                }
+            };
+            let formData = new FormData(document.getElementById("uploadForm"));
+            xhr.send(formData);
+        }
+        function loadTracks() {
+            let request = new XMLHttpRequest();
+            request.onreadystatechange = function() {
+                if (request.readyState === 4 && request.status === 200) {
+                    let list = JSON.parse(request.responseText);
+                    let musics = document.getElementById('musics');
+                    for (let i=0; i<list.length; i++) {
+                        let divElement = document.createElement('div');
+                        divElement.classList.add("form-control");
+                        divElement.classList.add("mt-1");
+
+                        let musicId = document.createElement('span');
+                        musicId.innerText = list[i].id + '. ';
+
+                        let musicName = document.createElement('span');
+                        musicName.innerText = list[i].musicName;
+
+                        let iconElement = document.createElement('i');
+                        iconElement.classList.add("fa");
+                        iconElement.classList.add("fa-play");
+
+                        let playElement = document.createElement('button');
+                        playElement.id = 'm_' + list[i].id;
+                        playElement.classList.add("float-right");
+                        playElement.classList.add("btn-success");
+                        playElement.classList.add("rounded-button");
+                        playElement.addEventListener("click", function (){
+                            let audioPlayer = document.getElementById('audioPlayer');
+                            if (audioPlayer !== null) {
+                                audioPlayer.remove();
+                            }
+                            let audio = document.createElement('audio');
+                            audio.id='audioPlayer';
+                            audio.style.display = "none";
+                            audio.src = list[i].urlAddress;
+                            audio.play();
+                            audio.onended = function(){
+                                audio.remove();
+                            };
+                            document.body.appendChild(audio);
+                        });
+                        playElement.appendChild(iconElement);
+
+                        divElement.appendChild(musicId);
+                        divElement.appendChild(musicName);
+                        divElement.appendChild(playElement);
+
+                        musics.appendChild(divElement);
+                    }
+                }
+            }
+            request.open("GET", 'http://localhost:8080/music/list', true);
+            request.send(null);
+        }
+    </script>
+</head>
+
+<body onload="loadTracks()">
+    <div class="container h-100">
+        <div class="card card-body h-75 mt-2">
+            <div class="form-row">
+                <div class="col-md-12 text-right">
+                    <button class="btn btn-info" data-toggle="modal" data-target="#uploadModal">Загрузить</button>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="col-md-12" id="musics"></div>
+            </div>
+        </div>
+    </div>
+    <div id="uploadModal" class="modal fade" role="dialog">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Загрузить мелодия</h4>
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <form id="uploadForm" action="/music/upload" method="post" enctype="multipart/form-data">
+                    <div class="form-row">
+                        <div class="col-md-12">
+                            <label for="uploader">Выберите файл</label>
+                            <input type="file" name="file" id="uploader" class="form-control"/>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="col-md-12">
+                            <label for="artist">Исполнитель</label>
+                            <input id="artist" name="artist" class="form-control"/>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="col-md-12">
+                            <label for="description">Описания</label>
+                            <textarea id="description" name="description" class="form-control"></textarea>
+                        </div>
+                    </div>
+                    <div class="form-row mt-2">
+                        <div class="col-md-12 text-center">
+                            <input type="button" class="btn btn-success" value="Загрузить" onclick="uploadFile()">
+                        </div>
+                    </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger" data-dismiss="modal">Закрыть</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
